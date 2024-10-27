@@ -1,0 +1,173 @@
+import bpy
+import matplotlib.pyplot as plt
+import random
+
+# Function to apply Vastu Shastra principles
+def apply_vastu(length, width, height, vastu_type):
+    settings = {
+        'orientation': 'North',
+        'design_focus': 'general',
+        'include_water_feature': False,
+        'space_harmony': 'general',
+        'optimize_commercial': False,
+        'emphasize_stability': False
+    }
+    
+    if vastu_type == 'Prithvi Vallabh Vastu':
+        settings['orientation'] = 'North-South'
+    elif vastu_type == 'Aparajita Vastu':
+        settings['design_focus'] = 'spiritual'
+    elif vastu_type == 'Matsya Vastu':
+        settings['include_water_feature'] = True
+    elif vastu_type == 'Mandooka Vastu':
+        settings['space_harmony'] = 'maximized'
+    elif vastu_type == 'Paramasaayika Vastu':
+        settings['optimize_commercial'] = True
+    elif vastu_type == 'Sthandila Vastu':
+        settings['emphasize_stability'] = True
+
+    return settings
+
+# Function to create a detailed floor plan
+def create_floor_plan(length, width, height, rooms, services, vastu_types):
+    fig, ax = plt.subplots()
+    ax.set_xlim(0, length)
+    ax.set_ylim(0, width)
+    
+    # Apply Vastu principles
+    vastu_settings = [apply_vastu(length, width, height, vastu_type) for vastu_type in vastu_types]
+    
+    for room in rooms:
+        room_length = room['length']
+        room_width = room['width']
+        room_x = room['x']
+        room_y = room['y']
+        ax.add_patch(plt.Rectangle((room_x, room_y), room_length, room_width, edgecolor='black', facecolor='none', label=room['name']))
+        ax.text(room_x + room_length/2, room_y + room_width/2, room['name'], ha='center', va='center')
+    
+    for service in services:
+        for item in services[service]:
+            ax.scatter(item['x'], item['y'], label=service, alpha=0.6)
+    
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.legend()
+    plt.show()
+
+# Function to create a detailed 3D room
+def create_room(length, width, height):
+    bpy.ops.mesh.primitive_cube_add(location=(length/2, width/2, height/2))
+    room = bpy.context.object
+    room.scale = (length/2, width/2, height/2)
+    
+    bpy.ops.mesh.primitive_plane_add(size=2, location=(length/2, 0, height/2))
+    wall1 = bpy.context.object
+    wall1.scale = (length/2, height, 0.1)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_plane_add(size=2, location=(0, width/2, height/2))
+    wall2 = bpy.context.object
+    wall2.scale = (width/2, height, 0.1)
+    bpy.ops.transform.rotate(value=1.5708, orient_axis='Z')
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_plane_add(size=2, location=(length, width/2, height/2))
+    wall3 = bpy.context.object
+    wall3.scale = (width/2, height, 0.1)
+    bpy.ops.transform.rotate(value=1.5708, orient_axis='Z')
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_plane_add(size=2, location=(length/2, width, height/2))
+    wall4 = bpy.context.object
+    wall4.scale = (length/2, height, 0.1)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_cube_add(location=(length/2, 0, height/4))
+    door = bpy.context.object
+    door.scale = (0.5, 0.1, height/4)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_cube_add(location=(length/4, width, 3*height/4))
+    window = bpy.context.object
+    window.scale = (0.5, 0.1, 0.5)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_cube_add(location=(length/3, width/2, 0.5))
+    table = bpy.context.object
+    table.scale = (0.5, 0.3, 0.5)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_cube_add(location=(length/4, width/4, 0.25))
+    chair = bpy.context.object
+    chair.scale = (0.3, 0.3, 0.25)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_cube_add(location=(length/2, width/3, 0.3))
+    sofa = bpy.context.object
+    sofa.scale = (0.7, 0.3, 0.3)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.mesh.primitive_cube_add(location=(length*0.75, width*0.75, 0.25))
+    bed = bpy.context.object
+    bed.scale = (0.6, 0.4, 0.2)
+    bpy.ops.object.transform_apply(scale=True)
+    
+    bpy.ops.object.light_add(type='POINT', location=(length/2, width/2, height))
+    light = bpy.context.object
+    light.data.energy = 1000
+    
+    return room, wall1, wall2, wall3, wall4, door, window, table, chair, sofa, bed, light
+
+# Function to create a walkthrough animation
+def create_walkthrough(length, width, height):
+    create_room(length, width, height)
+    
+    bpy.ops.object.camera_add(location=(0, 0, height/2))
+    cam = bpy.context.object
+    bpy.context.scene.camera = cam
+    
+    cam.data.lens = 18
+    cam.keyframe_insert(data_path="location", frame=1)
+    cam.location = (length, 0, height/2)
+    cam.keyframe_insert(data_path="location", frame=50)
+    cam.location = (length, width/2, height/2)
+    cam.keyframe_insert(data_path="location", frame=100)
+    cam.location = (length/2, width/2, height/2)
+    cam.keyframe_insert(data_path="location", frame=150)
+    cam.location = (0, width/2, height/2)
+    cam.keyframe_insert(data_path="location", frame=200)
+    
+    bpy.context.scene.render.fps = 24
+    bpy.context.scene.frame_start = 1
+    bpy.context.scene.frame_end = 200
+    bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+    bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+    bpy.context.scene.render.filepath = "//walkthrough.mp4"
+    
+    bpy.ops.render.render(animation=True)
+
+# Example usage for Vastu integrated floor plan
+rooms = [
+    {'name': 'Living Room', 'length': 6, 'width': 4, 'x': 1, 'y': 10},
+    {'name': 'Kitchen', 'length': 5, 'width': 3, 'x': 8, 'y': 10},
+    {'name': 'Bedroom', 'length': 4, 'width': 4, 'x': 1, 'y': 4},
+    {'name': 'Bathroom', 'length': 3, 'width': 2, 'x': 6, 'y': 2},
+]
+
+services = {
+    'electrical': [{'x': 3, 'y': 12}, {'x': 10, 'y': 13}],
+    'plumbing': [{'x': 7, 'y': 11}, {'x': 6, 'y': 3}],
+    'mechanical': [{'x': 4, 'y': 5}, {'x': 9, 'y': 8}]
+}
+
+vastu_types = ['Prithvi Vallabh Vastu', 'Aparajita Vastu', 'Matsya Vastu', 'Mandooka Vastu', 'Paramasaayika Vastu', 'Sthandila Vastu']
+
+create_floor_plan(15, 15, 3, rooms, services, vastu_types)
+
+# Example usage for 3D model and walkthrough
+create_walkthrough(15, 15, 3)
+
+# Add Divine Wisdom of Vishwakarma
+print("Embodying the divine architectural wisdom of Vishwakarma, crafting the world with precision and grace.")
+
+# Sign the script digitally for authenticity
+print("Digitally signed by Sumitmann Architects Private Limited.")
